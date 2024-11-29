@@ -526,6 +526,55 @@ ggplot(results, aes(x = Model, y = BIC)) +
 
 ```
 
+#L) Checking Model Assumptions on 4 Predictor Model
+```{r}
+
+#Transformed Regression Model: Four Predictors 
+model4 <- lm(p_counts_kisses ~ p_counts_profileVisits + p_country_pop + verified + age, data = new_data)
+
+#PART 1: RESIDUAL PLOTS 
+par(mfrow = c(1, 3)) # Environment 1
+# 1. Residual vs Fitted plot
+x3 = fitted(model4)
+y3 = resid(model4)
+plot_model1 <- plot(x = x3, y = y3, xlab = "Fitted", ylab = "Residual", main = "Residual vs Fitted")
+
+# 2. Residual vs Predictor: Age 
+plot(y3 ~ p_age, main = "Residual vs Age", 
+     xlab = "Age", ylab = "Residual")
+
+# 3. Residual vs Predictor: counts_profileVisits 
+plot(y3 ~ p_counts_profileVisits, main = "Residual vs Profile Visits", 
+     xlab = "Profile Vists", ylab = "Residual")
+par(mfrow = c(1, 1))
+
+par(mfrow = c(1, 3))
+# 5. Residual vs Predictor: country_pop 
+plot(y3 ~ p_country_pop, main = "Residual vs Country Population", 
+     xlab = "Country Population", ylab = "Residual")
+
+# 8. Residual vs Predictor: Verified Status
+boxplot(y3 ~ new_data$verified, main = "Residual vs Status As Verifed", 
+        xlab = "Status As Verifed", ylab = "Residual", names = c("Not Verifed", "Verified"))
+
+# QQ-NORM PLOTS 
+qqnorm_model1 <- qqnorm(y3)
+qqline(y3)
+
+par(mfrow = c(1, 1))
+
+# Correcting Normality in Response: EDA
+hist(
+  p_counts_kisses, 
+  breaks = 50, 
+  main = "Reponse Histogram", 
+  xlim = c(min(p_counts_kisses), max(p_counts_kisses)), 
+  xlab = "Number of Likes", 
+  col = "lightblue"
+  )
+
+```
+
 
 
 
