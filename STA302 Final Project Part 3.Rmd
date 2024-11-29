@@ -1,0 +1,461 @@
+---
+title: "STA302 Project"
+output: pdf_document
+date: "2024-11-29"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#A) Reading Orginal Data:
+```{r}
+
+#install.packages('tidyverse')
+library(tidyverse)
+
+data <- read_csv("dating_data.csv") #Reads original dataset
+
+names(data) <- gsub(" ", "_", names(data)) #Changes Spaces to Underlines: 
+
+```
+
+#B) Cleaning Original Data:
+```{r}
+
+#PART 1: Creates New Variable of the full names of the users country of origin
+data <- data %>%
+  mutate(country_full = case_when(
+    country == "CH" ~ "Switzerland",
+    country == "CA" ~ "Canada",
+    country == "DE" ~ "Germany",
+    country == "FR" ~ "France",
+    country == "US" ~ "United States of America",
+    country == "AT" ~ "Austria",
+    country == "CZ" ~ "Czech Republic",
+    country == "JM" ~ "Jamaica",
+    country == "SC" ~ "Seychelles",
+    country == "LR" ~ "Liberia",
+    country == "BA" ~ "Bosnia and Herzegovina",
+    country == "IT" ~ "Italy",
+    country == "LI" ~ "Liechtenstein",
+    country == "ES" ~ "Spain",
+    country == "NL" ~ "Netherlands",
+    country == "LU" ~ "Luxembourg",
+    country == "AU" ~ "Australia",
+    country == "BR" ~ "Brazil",
+    country == "RU" ~ "Russia",
+    country == "ID" ~ "Indonesia",
+    country == "TR" ~ "Turkey",
+    country == "GB" ~ "United Kingdom",
+    country == "BE" ~ "Belgium",
+    country == "ET" ~ "Ethiopia",
+    country == "HU" ~ "Hungary",
+    country == "AR" ~ "Argentina",
+    country == "PE" ~ "Peru",
+    country == "UA" ~ "Ukraine",
+    country == "IN" ~ "India",
+    country == "RO" ~ "Romania",
+    country == "PH" ~ "Philippines",
+    country == "CF" ~ "Central African Republic",
+    TRUE ~ NA_character_  #For any unmatched values, set to NA
+  ))
+
+
+#PART 2: Creates New Variable of the population of each country in the dataset
+data <- data %>%
+  mutate(country_pop = case_when(
+    country == "CH" ~ 8849850,
+    country == "CA" ~ 40097760,
+    country == "DE" ~ 84482270,
+    country == "FR" ~ 68170230,
+    country == "US" ~ 334914900,
+    country == "AT" ~ 9132380,
+    country == "CZ" ~ 10873690,
+    country == "JM" ~ 2825540,
+    country == "SC" ~ 119770,
+    country == "LR" ~ 5418380,
+    country == "BA" ~ 3210850,
+    country == "IT" ~ 58761150,
+    country == "LI" ~ 39580,
+    country == "ES" ~ 48373340,
+    country == "NL" ~ 17879490,
+    country == "LU" ~ 668610,
+    country == "AU" ~ 26638540,
+    country == "BR" ~ 216422450,
+    country == "RU" ~ 143826130,
+    country == "ID" ~ 277534120,
+    country == "TR" ~ 85326000,
+    country == "GB" ~ 68350000,
+    country == "BE" ~ 11822590,
+    country == "ET" ~ 126527060,
+    country == "HU" ~ 9589870,
+    country == "AR" ~ 46654580,
+    country == "PE" ~ 34352720,
+    country == "UA" ~ 37000000,
+    country == "IN" ~ 1428627660,
+    country == "RO" ~ 19056120,
+    country == "PH" ~ 117337370,
+    country == "CF" ~ 5742310,
+    TRUE ~ NA_real_  # For any unmatched values, set to NA
+  ))
+
+#Select Relevant Variables
+data <- data%>%
+  select(counts_kisses, age, counts_pictures, counts_profileVisits, country_pop, lang_count, verified, genderLooking)
+
+```
+
+#C) Exploratory Data Analysis:
+```{r}
+
+# 1. Response Histogram: counts_kisses
+hist(
+  data$counts_kisses, 
+  breaks = 50, 
+  main = "Reponse Histogram", 
+  xlim = c(min(data$counts_kisses), max(data$counts_kisses)), 
+  xlab = "Number of Likes", 
+  col = "lightblue"
+  )
+
+# 2. Predictor Histogram: age
+hist(
+  data$age, 
+  breaks = 14, 
+  main = "Predictor Histogram: Age", 
+  xlim = c(min(data$age), max(data$age)), 
+  xlab = "Age", 
+  col = "lightblue"
+  )
+
+# 3. Predictor Histogram: counts_picture 
+hist(
+  data$counts_pictures, 
+  breaks = 30, 
+  main = "Predictor Histogram: Number of Pictures", 
+  xlim = c(min(data$counts_pictures), max(data$counts_pictures)), 
+  xlab = "Number of Pictures", 
+  col = "lightblue"
+  )
+
+# 4. Predictor Histogram: counts_profileVisits 
+hist(
+  data$counts_profileVisits, 
+  breaks = 100, 
+  main = "Predictor Histogram: Number of Profile Visits", 
+  xlim = c(min(data$counts_profileVisits), max(data$counts_profileVisits)), 
+  xlab = "Number of Profile Visits", 
+  col = "lightblue"
+  )
+
+# 5. Predictor Histogram: country_pop 
+hist(
+  data$country_pop, 
+  breaks = 100, 
+  main = "Predictor Histogram: Country Population", 
+  xlab = "Number of Likes", 
+  col = "lightblue"
+  )
+
+# 6. Predictor Histogram: lang_count 
+hist(
+  data$lang_count, 
+  breaks = 12, 
+  main = "Predictor Histogram: Number of Languages Known", 
+  xlim = c(min(data$lang_count), max(data$lang_count)), 
+  xlab = "Number of Languages Known", 
+  col = "lightblue"
+  )
+
+```
+
+#D) Preliminary Regression Model:
+```{r}
+
+#Preliminary Regression Model
+model <- lm(counts_kisses ~ age + counts_pictures + counts_profileVisits + country_pop + lang_count + verified + genderLooking, data = data)
+
+#PART 1: RESIDUAL PLOTS 
+par(mfrow = c(1, 3)) # Environment 1
+# 1. Residual vs Fitted plot
+x1 = fitted(model)
+y1 = resid(model)
+plot_model1 <- plot(x = x1, y = y1, xlab = "Fitted", ylab = "Residual", main = "Residual vs Fitted")
+
+# 2. Residual vs Predictor: Age 
+plot(y1 ~ data$age, main = "Residual vs Age", 
+     xlab = "Age", ylab = "Residual")
+
+# 3. Residual vs Predictor: counts_picture 
+plot(y1 ~ data$counts_pictures, main = "Residual vs Number of Prictures", 
+     xlab = "Number of Pictures", ylab = "Residual")
+
+par(mfrow = c(1, 1))
+
+par(mfrow = c(1, 3)) # Environment 2
+# 4. Residual vs Predictor: counts_profile Visits 
+plot(y1 ~ data$counts_profileVisits, main = "Residual vs Profile Visits", 
+     xlab = "Profile Vists", ylab = "Residual")
+
+# 5. Residual vs Predictor: country_pop 
+plot(y1 ~ data$country_pop, main = "Residual vs Country Population", 
+     xlab = "Country Population", ylab = "Residual")
+
+# 6. Residual vs Predictor: lang_count
+plot(y1 ~ data$lang_count, main = "Residual vs Number of Languages Known", 
+     xlab = "Number of Languages Known", ylab = "Residual")
+
+par(mfrow = c(1, 1))
+
+par(mfrow = c(1, 3)) # Environment 3
+# 7. Residual vs Predictor: Verified Status
+boxplot(y1 ~ data$verified, main = "Residual vs Status As Verifed", 
+        xlab = "Status As Verifed", ylab = "Residual", names = c("Not Verifed", "Verified"))
+
+# 8. Residual vs Predictor: gender Looking
+boxplot(y1 ~ data$genderLooking, main = "Residual vs Gender of Interest", 
+     xlab = "Gender of Interest", ylab = "Residual", names = c('Female', 'Both', 'Male', 'None'))
+
+# QQ-NORM PLOTS 
+qqnorm_model1 <- qqnorm(y1)
+qqline(y1)
+
+par(mfrow = c(1, 1))
+
+```
+
+#E) Checking Conditions To Verify Interpretability of the Residual Plots:
+```{r} 
+
+# Checking Assumption 1: Response vs Fitted
+condition_1 <- plot(x = x1, y = data$counts_kisses, main = "Likes vs Fitted", xlab = "Fitted", ylab = "Likes")
+abline(a=0, b=1, lty=2) # 45 degree line
+
+# Checking Assumption 2: Pairwise Scatterplot
+condition_2 <- pairs(data[, c("age", "counts_pictures", "counts_profileVisits", "country_pop", "lang_count")])
+
+```
+
+#F) Applying Transformations To Preliminary Model: Box Cox
+```{r}
+
+install.packages('car')
+library(car)
+
+# 1. Remove Non-Strictly Positive Values & Non-Numeric Variables 
+new_data <- data%>%
+  select(counts_kisses, age, counts_pictures, counts_profileVisits, country_pop, 
+         lang_count, verified, genderLooking) %>%
+  filter(counts_kisses > 0 & age > 0 & counts_pictures > 0)
+
+# 2. Apply Box Cox Transformation
+transformed <- powerTransform(cbind(new_data[,0:5]))
+summary(transformed)
+
+# 3. Transforming the Variables
+p_counts_kisses <- new_data$counts_kisses^(0.0882)
+
+p_age <- new_data$age
+
+p_counts_pictures <- new_data$counts_pictures
+
+p_counts_profileVisits <- new_data$counts_profileVisits^(0.1184)
+
+p_country_pop <- new_data$country_pop^(0.2539)
+
+# 4. New Model
+t_model <- lm(p_counts_kisses ~ p_age + p_counts_pictures + p_counts_profileVisits 
+              + p_country_pop + lang_count + verified + genderLooking, data = new_data)
+
+```
+
+#G) Checking Transformed Model Assumptions
+```{r}
+
+#Transformed Regression Model
+t_model <- lm(p_counts_kisses ~ p_age + p_counts_pictures + p_counts_profileVisits 
+              + p_country_pop + lang_count + verified + genderLooking, data = new_data)
+
+#PART 1: RESIDUAL PLOTS 
+par(mfrow = c(1, 3)) # Environment 1
+# 1. Residual vs Fitted plot
+x2 = fitted(t_model)
+y2 = resid(t_model)
+plot_model1 <- plot(x = x2, y = y2, xlab = "Fitted", ylab = "Residual", main = "Residual vs Fitted")
+
+# 2. Residual vs Predictor: Age 
+plot(y2 ~ p_age, main = "Residual vs Age", 
+     xlab = "Age", ylab = "Residual")
+
+# 3. Residual vs Predictor: counts_picture 
+plot(y2 ~ p_counts_pictures, main = "Residual vs Number of Prictures", 
+     xlab = "Number of Pictures", ylab = "Residual")
+
+par(mfrow = c(1, 1))
+
+par(mfrow = c(1, 3)) # Environment 2
+# 4. Residual vs Predictor: counts_profileVisits 
+plot(y2 ~ p_counts_profileVisits, main = "Residual vs Profile Visits", 
+     xlab = "Profile Vists", ylab = "Residual")
+
+# 5. Residual vs Predictor: country_pop 
+plot(y2 ~ p_country_pop, main = "Residual vs Country Population", 
+     xlab = "Country Population", ylab = "Residual")
+
+# 6. Residual vs Predictor: lang_count
+plot(y2 ~ new_data$lang_count, main = "Residual vs Number of Languages Known", 
+     xlab = "Number of Languages Known", ylab = "Residual")
+
+par(mfrow = c(1, 1))
+
+par(mfrow = c(1, 3)) # Environment 3
+# 7. Residual vs Predictor: genderLooking
+boxplot(y2 ~ new_data$genderLooking, main = "Residual vs Gender of Interest", 
+     xlab = "Gender of Interest", ylab = "Residual", names = c('Female', 'Both', 'Male', 'None'))
+
+# 8. Residual vs Predictor: Verified Status
+boxplot(y2 ~ new_data$verified, main = "Residual vs Status As Verifed", 
+        xlab = "Status As Verifed", ylab = "Residual", names = c("Not Verifed", "Verified"))
+
+# QQ-NORM PLOTS 
+qqnorm_model1 <- qqnorm(y2)
+qqline(y2)
+
+par(mfrow = c(1, 1))
+
+# Correcting Normality in Response: EDA
+hist(
+  p_counts_kisses, 
+  breaks = 50, 
+  main = "Reponse Histogram", 
+  xlim = c(min(p_counts_kisses), max(p_counts_kisses)), 
+  xlab = "Number of Likes", 
+  col = "lightblue"
+  )
+
+```
+
+#H) Checking Two Conditions on the Transformed Model:
+```{r} 
+
+# Checking Assumption 1: Response vs Fitted
+condition_1 <- plot(x = x2, y = p_counts_kisses, main = "Likes vs Fitted", xlab = "Fitted", ylab = "Likes")
+abline(a=0, b=1, lty=2) # 45 degree line
+
+# Checking Assumption 2: Pairwise Scatterplot
+condition_2 <- pairs(new_data[, c("age", "counts_pictures", "counts_profileVisits", "country_pop", "lang_count")])
+
+```
+
+#I) Conduct ANOVA & Partial F-Test's + Check for Multicollinarity
+```{r}
+
+# 1. ANOVA: Overall Significance
+# -- Null: No significant Linear Relationship between the set of Predictors 
+#          in t_model and p_counts_kisses
+# -- Result: Reject the Null at alpha significance level of 0.05 given...
+# -- F-statistic:  2608 on 9 and 3712 DF,  p-value: < 2.2e-16
+summary(t_model)
+
+# 2. Partial F-Test:
+# -- Null: No significant Linear Relationship between the set of Predictors 
+#          removed and p_counts_kisses
+
+reduced_model <- lm(p_counts_kisses ~ p_age 
+                    + p_counts_pictures 
+                    + p_counts_profileVisits 
+                    + p_country_pop + lang_count 
+                    + genderLooking, data = new_data)
+
+anova(reduced_model, t_model) 
+# -- Removed: p_age:                  -> R^2: 0.8630
+# -- Removed: p_counts_pictures:      -> R^2: 0.8632
+# -- Removed: p_counts_profileVisits: -> R^2: 0.2418
+# -- Removed: p_country_pop:          -> R^2: 0.8623
+# -- Removed: lang_count:             -> R^2: 0.8633
+# -- Removed: verified:               -> R^2: 0.8628
+# -- Removed: genderLooking:          -> R^2: 0.8631
+
+# -- Result: Tested removing each predictor and in all reduced models, we 
+#            reject the Null Hypothesis. Also the Coefficient of Determination 
+#            is maximized at R^2 = 0.8635 with the full model, therefore we 
+#            pick the full model: t_model
+
+#3. Check for Multicollinarity: 
+# -- Result: No serious Multicollinarity present: All < 5
+vif(t_model)
+
+```
+
+#J) Checking for Problematic Observations 
+```{r}
+# 1. Leverage Points:
+hii <- hatvalues(t_model)
+cutoff_hii <- 2*(length(coef(t_model))/nrow(new_data))
+
+which(hii > cutoff_hii) #Total: 189
+```
+
+```{r}
+# 2. Outlier Points: 
+ri <- rstandard(t_model)
+
+which(ri > 4 | ri < -4) #Total: 1
+
+```
+
+```{r}
+# 3. Influence on all fitted values:
+di <- cooks.distance(t_model)
+cutoff_di <- qf(0.5, 10, 3713)
+
+which(di > cutoff_di) #Total: 0
+
+```
+
+```{r}
+# 4. Influence on a points own fitted values:
+dffits <-  dffits(t_model)
+cutoff_dffits <- 2*sqrt(10/3722)
+
+which(abs(dffits) > cutoff_dffits) #Total: 180
+
+```
+
+```{r}
+# 5. Influence on the coefficients:
+dfbetas <- dfbetas(t_model)
+cutoff_dfbetas <- 2/sqrt(3722)
+
+which(abs(dfbetas[,1]) > cutoff_dfbetas)  #Total: 93
+which(abs(dfbetas[,2]) > cutoff_dfbetas)  #Total: 247
+which(abs(dfbetas[,3]) > cutoff_dfbetas)  #Total: 197
+which(abs(dfbetas[,4]) > cutoff_dfbetas)  #Total: 243
+which(abs(dfbetas[,5]) > cutoff_dfbetas)  #Total: 177
+which(abs(dfbetas[,6]) > cutoff_dfbetas)  #Total: 139
+which(abs(dfbetas[,7]) > cutoff_dfbetas)  #Total: 212
+which(abs(dfbetas[,8]) > cutoff_dfbetas)  #Total: 30
+which(abs(dfbetas[,9]) > cutoff_dfbetas)  #Total: 16  
+which(abs(dfbetas[,10]) > cutoff_dfbetas) #Total: 23
+```
+
+#K) Selection Methods: Automated vs Manual 
+```{r}
+#TODO:
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
