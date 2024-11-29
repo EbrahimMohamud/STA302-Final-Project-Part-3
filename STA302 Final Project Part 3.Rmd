@@ -440,9 +440,90 @@ which(abs(dfbetas[,9]) > cutoff_dfbetas)  #Total: 16
 which(abs(dfbetas[,10]) > cutoff_dfbetas) #Total: 23
 ```
 
-#K) Selection Methods: Automated vs Manual 
+#K) Selection Methods: Automated
 ```{r}
-#TODO:
+
+# Install required libraries if not already installed
+# install.packages("leaps")
+library(leaps)
+library(car)
+library(ggplot2)
+
+# Your existing model fitting
+best <- regsubsets(p_counts_kisses ~ p_age 
+                   + p_counts_pictures 
+                   + p_counts_profileVisits 
+                   + p_country_pop + lang_count 
+                   + verified + genderLooking, data = new_data, 
+                   nbest = 1, nvmax = 9)
+
+summary(best)
+
+# Models at different levels
+model1 <- lm(p_counts_kisses ~ p_counts_profileVisits, data = new_data)
+model2 <- lm(p_counts_kisses ~ p_counts_profileVisits + p_country_pop, data = new_data)
+model3 <- lm(p_counts_kisses ~ p_counts_profileVisits + p_country_pop + verified, data = new_data)
+model4 <- lm(p_counts_kisses ~ p_counts_profileVisits + p_country_pop + verified + age, data = new_data)
+model5 <- lm(p_counts_kisses ~ p_counts_profileVisits + p_country_pop + verified + age + genderLooking, data = new_data)
+model6 <- lm(p_counts_kisses ~ p_counts_profileVisits + p_country_pop + verified + age + genderLooking + p_counts_pictures, data = new_data)
+model7 <- lm(p_counts_kisses ~ p_counts_profileVisits + p_country_pop + verified + age + genderLooking + p_counts_pictures + lang_count, data = new_data)
+
+# Add Adjusted R^2, AIC, Adjusted AIC, and BIC
+models_list <- list(model1, model2, model3, model4, model5, model6, model7)
+
+# Calculate metrics for each model
+metrics <- lapply(models_list, function(model) {
+  n <- length(model$fitted.values)  # Sample size
+  k <- length(coef(model))         # Number of parameters
+  aic <- AIC(model)
+  bic <- BIC(model)
+  adj_aic <- aic + 2 * (k + 2) * (k + 3) / (n - k - 1)  # Adjusted AIC formula
+  adj_r2 <- summary(model)$adj.r.squared
+  data.frame(Adjusted_R2 = adj_r2, AIC = aic, Adjusted_AIC = adj_aic, BIC = bic)
+})
+
+# Combine results into a single data frame
+results <- do.call(rbind, metrics)
+
+# Add model names
+results$Model <- c("Model 1", "Model 2", "Model 3", "Model 4", "Model 5", "Model 6", "Model 7")
+
+# Reorder columns
+results <- results[, c("Model", "Adjusted_R2", "AIC", "Adjusted_AIC", "BIC")]
+
+# Print results
+print(results)
+
+# Plot Adjusted R^2
+ggplot(results, aes(x = Model, y = Adjusted_R2)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  geom_text(aes(label = round(Adjusted_R2, 3)), vjust = -0.5) +
+  theme_minimal() +
+  labs(title = "Comparison of Adjusted R Squared", x = "Models", y = "Adjusted R^2") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# OPTIONAL: Plot AIC, Adjusted AIC, and BIC (separate plots for clarity)
+ggplot(results, aes(x = Model, y = AIC)) +
+  geom_bar(stat = "identity", fill = "lightgreen") +
+  geom_text(aes(label = round(AIC, 3)), vjust = -0.5) +
+  theme_minimal() +
+  labs(title = "Comparison of AIC", x = "Models", y = "AIC") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplot(results, aes(x = Model, y = Adjusted_AIC)) +
+  geom_bar(stat = "identity", fill = "orange") +
+  geom_text(aes(label = round(Adjusted_AIC, 3)), vjust = -0.5) +
+  theme_minimal() +
+  labs(title = "Comparison of Adjusted AIC", x = "Models", y = "Adjusted AIC") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplot(results, aes(x = Model, y = BIC)) +
+  geom_bar(stat = "identity", fill = "purple") +
+  geom_text(aes(label = round(BIC, 3)), vjust = -0.5) +
+  theme_minimal() +
+  labs(title = "Comparison of BIC", x = "Models", y = "BIC") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
 ```
 
 
