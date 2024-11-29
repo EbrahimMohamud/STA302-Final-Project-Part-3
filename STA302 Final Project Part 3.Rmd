@@ -575,6 +575,43 @@ hist(
 
 ```
 
+# M) Splitting the data into a training and testing set 
+```{r}
+
+new_data <- na.omit(new_data)
+set.seed(123)
+s <- sample(1:nrow(new_data), 1861, replace = FALSE)
+
+train <- new_data[s ,]
+test <- new_data[-s ,]
+
+trn_counts_kisses <- train$counts_kisses^(0.0882)
+trn_counts_profileVisits <- train$counts_profileVisits^(0.1184)
+trn_country_pop <- train$country_pop^(0.2539)
+
+tst_counts_kisses <- test$counts_kisses^(0.0882)
+tst_counts_profileVisits <- test$counts_profileVisits^(0.1184)
+tst_country_pop <- test$country_pop^(0.2539)
+
+
+model_train <- lm(trn_counts_kisses ~ trn_counts_profileVisits + trn_country_pop + verified + age, data = train)
+summary(model_train)
+vif(model_train)
+
+model_test <- lm(tst_counts_kisses ~ tst_counts_profileVisits + tst_country_pop + verified + age, data = test)
+summary(model_test)
+vif(model_test)
+
+fitted_test <- predict(model_train, data = test)
+
+# Calculate the testing MSE
+mean((test$counts_kisses^(0.0882) - fitted_test)^2)
+
+# Calculate the training MSE based on the output of the data 
+train_mse <- (((0.07731)^2)*(1856))/1861
+train_mse
+
+```
 
 
 
