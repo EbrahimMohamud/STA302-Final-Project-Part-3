@@ -1,1 +1,1 @@
-# Our Group Does Not wish to be enter into any competition. Thank you 
+# Our group does not wish to be enter into any competition. 
